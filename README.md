@@ -43,7 +43,7 @@ tbd
 * `intToStr` - integer to string conversion without calling strconv
 * `readAll` - ioutil.ReadAll called
 * `textTemp` - checks if HTTP methods and template/text are in use
-* 'hardcoded` - looks for hardcoded credentials
+* `hardcoded` - looks for hardcoded credentials
 
 ## Design Choices
 

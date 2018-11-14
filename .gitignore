@@ -1,0 +1,19 @@
+# Binaries for programs and plugins
+main
+./Go-AST-Analysis-Tool
+Go-AST-Analysis-Tool
+Glasgo
+./Glasgo
+*.swp
+todo
+done
+squib.go
+
+# local testing
+sandbox
+sandbox/*
+
+# random junk
+.DS_Store
+printAST.txt
+printAST.go

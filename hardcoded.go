@@ -6,9 +6,10 @@ package main
 import (
 	"go/ast"
 	"go/token"
-	"fmt"
 	"encoding/hex"
 	"encoding/base64"
+	"regexp"
+	"strings"
 )
 
 func init() {
@@ -17,6 +18,7 @@ func init() {
 		hardcodedCheck,
 		assignStmt, genDecl)
 }
+
 
 // isHighEntropy checks for string encoding to
 // properly decode it and then measures its entropy
@@ -56,11 +58,47 @@ func isHighEntropy(s *string) bool {
 	return false;
 }
 
-/*
-func checkAssign(node *ast.AssignStmt) {
+// isCommonCred checks for commonly used credentials
+// This check doesn't try to be exhaustive.
+func isCommonCred(s *string) bool {
+	credPatterns := []string{"password", "p4ssword", "123456", "letmein", "admin", "abc123", "passw0rd", "pwd"};
+	val := strings.ToLower(*s);
 
+	for _, str := range credPatterns {
+		re := regexp.MustCompile(str);
+		if matches := re.MatchString(val); matches {
+			return true;
+		}
+	}
+	return false;
 }
-*/
+
+// checkSuspectVal runs essentially the same checks on a suspect value
+// to see if it may be a credential.
+func checkSuspectVal(f *File, basicLit *ast.BasicLit) {
+	// strip quotes from input
+	suspectVal := basicLit.Value;
+	suspectVal = suspectVal[1: len(suspectVal) -1];
+	// now check suspectVal
+	if isCommonCred(&suspectVal) {
+		f.Reportf(basicLit.Pos(), "Possible credential found: %s", suspectVal);
+		return;
+	}
+	if isHighEntropy(&suspectVal) {
+		f.Reportf(basicLit.Pos(), "Possible credential found: %s", suspectVal);
+		return;
+	}
+	return;
+}
+
+// checkAssignStmt starts with an AssignStmt, checks if 
+func checkAssignStmt(f *File, node *ast.AssignStmt) {
+	for _, expr := range node.Rhs {
+		if basicLit, ok := expr.(*ast.BasicLit); ok {
+			checkSuspectVal(f, basicLit);
+		}
+	}
+}
 
 // checkGenDecl starts with a GenDecl, checks if it is a const or a var
 // then goes through its specs, then converts them to ValueSpecs
@@ -73,15 +111,7 @@ func checkGenDecl(f *File, node *ast.GenDecl) {
 			if valSpec, ok := spec.(*ast.ValueSpec); ok {
 				for _, expr := range valSpec.Values {
 					if basicLit, ok := expr.(*ast.BasicLit); ok {
-						suspectVal := basicLit.Value
-						// strip quotes from suspectVal
-						suspectVal = suspectVal[1: len(suspectVal) -1];
-						// now check suspectVal 
-						if isHighEntropy(&suspectVal) {
-							f.Reportf(expr.Pos(), "Possible credential found: %s", suspectVal);
-							return;
-						}
-						return;
+						checkSuspectVal(f, basicLit);
 					}
 				}
 			}
@@ -92,7 +122,7 @@ func checkGenDecl(f *File, node *ast.GenDecl) {
 func hardcodedCheck(f *File, node ast.Node) {
 	switch t := node.(type) {
 	case *ast.AssignStmt:
-		fmt.Println("assign", t.Rhs[0]);	
+		checkAssignStmt(f, t);
 	case *ast.GenDecl:
 		checkGenDecl(f, t);
 	}

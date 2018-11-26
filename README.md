@@ -1,6 +1,6 @@
 # Glasgo Static Analysis Tool
 
-This project's official repository has been moved to [Github-ttarvis/glasgo.](https://github.com/ttarvis/glasgo)
+A static analysis tool intended to check for potential security issues.  New tests will be added soon.  Special thanks to NCC Group Plc.
 
 ## Project
 

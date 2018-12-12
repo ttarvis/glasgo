@@ -78,7 +78,12 @@ func isCommonCred(s *string) bool {
 func checkSuspectVal(f *File, basicLit *ast.BasicLit) {
 	// strip quotes from input
 	suspectVal := basicLit.Value;
-	suspectVal = suspectVal[1: len(suspectVal) -1];
+	// todo: is this the best way to handle this?
+	// under certain conditions, the below slice assignment contains
+	// bounds that are out of range
+	if(string(suspectVal[0]) == `"`) {
+		suspectVal = suspectVal[1: len(suspectVal) -1];
+	}
 	// now check suspectVal
 	if isCommonCred(&suspectVal) {
 		f.Reportf(basicLit.Pos(), "Possible credential found: %s", suspectVal);

@@ -94,7 +94,7 @@ func (f *File) loc(pos token.Pos) string {
 // warnf is a formatted error printer that does not exit
 // but it does set an exit code.
 func warnf(format string, args ...interface{}) {
-	fmt.Fprintf(os.Stderr, "{insert tool name here}: "+format+"\n", args...);
+	fmt.Fprintf(os.Stderr, "Glasgo: "+format+"\n", args...);
 	exitCode = 1;
 }
 

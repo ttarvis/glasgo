@@ -75,6 +75,8 @@ func closeCheck(f *File, node ast.Node) {
 	// ugh I really hate this
 	// is walking the statements a better option?
 	if fun, ok := node.(*ast.FuncDecl); ok {
+		// todo: check that this prevents crashes
+		if (fun.Body == nil || fun.Body.List == nil) { return; }
 		for i, stmts := range fun.Body.List {
 			switch stmt := stmts.(type) {
 			case *ast.AssignStmt:

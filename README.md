@@ -44,6 +44,7 @@ tbd
 * `readAll` - ioutil.ReadAll called
 * `textTemp` - checks if HTTP methods and template/text are in use
 * `hardcoded` - looks for hardcoded credentials
+* `bind` - checks if listener bound to all interfaces
 
 ## Design Choices
 

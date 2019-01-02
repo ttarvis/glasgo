@@ -45,6 +45,7 @@ tbd
 * `textTemp` - checks if HTTP methods and template/text are in use
 * `hardcoded` - looks for hardcoded credentials
 * `bind` - checks if listener bound to all interfaces
+* 'TLSConfig' - checks for insecure TLS configuration
 
 ## Design Choices
 

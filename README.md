@@ -28,6 +28,12 @@ or
 Glasgo file1.go, file2.go
 ```
 
+or, when source files are outside of the Go path or the tool can't find them:
+
+```
+Glasgo -source directory1
+```
+
 `Note:` The tool does not run on both directories and individual files
 
 ## Architecture
@@ -46,6 +52,8 @@ tbd
 * `hardcoded` - looks for hardcoded credentials
 * `bind` - checks if listener bound to all interfaces
 * `TLSConfig` - checks for insecure TLS configuration
+* `exec` - checks for use of os/exec package
+* `unsafe` - checks for use of unsafe package
 
 ## Design Choices
 

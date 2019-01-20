@@ -14,12 +14,19 @@ import (
 	"strings"
 	"os"
 	"path/filepath"
+
+	"golang.org/x/tools/go/callgraph"
+	"golang.org/x/tools/go/loader"
+	"golang.org/x/tools/go/pointer"
+	"golang.org/x/tools/go/ssa"
+	"golang.org/x/tools/go/ssa/ssautil"
 )
 
 var stdImporter types.Importer
 
 var (
-	source = flag.Bool("source", false, "import from source instead of compiled object files")
+	source 	= 	flag.Bool("source", false, "import from source instead of compiled object files")
+	verbose = 	flag.Bool("verbose", false, "verbose logging and warnings")
 )
 
 // a global variable for the exit code.
@@ -158,6 +165,11 @@ type Package struct {
 	types 	map[ast.Expr]types.TypeAndValue;
 	typePkg	*types.Package
 	info	*types.Info
+
+	lp	*loader.Program
+	ssaProg	*ssa.Program
+	ssaPkg	[]*ssa.Package // SSA packages
+	cGraph	*callgraph.Graph
 }
 
 func (pkg *Package) check(fs *token.FileSet, astFiles []*ast.File) error {
@@ -174,7 +186,9 @@ func (pkg *Package) check(fs *token.FileSet, astFiles []*ast.File) error {
 		Importer: stdImporter,
 		Error: func(err error) { 
 				// todo refactor this
-				fmt.Printf("\tWarning: during type checking, %v\n", err)
+				if *verbose {
+					fmt.Printf("\tWarning: during type checking, %v\n", err)
+				}
 			},
 	}
 
@@ -210,7 +224,9 @@ func checkPackageDir(directory string) {
 			return;
 		}
 		// not considered fatal because we are recursively walking directories
-		warnf("error processing directory %s, %s", directory, err);
+		if *verbose {
+			warnf("error processing directory %s, %s", directory, err);
+		}
 		return;
 	}
 	var names []string
@@ -246,7 +262,9 @@ func checkPackage(names []string) {
 			parsedFile, err = parser.ParseFile(fset, name, nil, parser.ParseComments)
 			if err != nil {
 				// warn but continue
-				warnf("error: %s: %s", name, err);
+				if *verbose {
+					warnf("error: %s: %s", name, err);
+				}
 				return;
 			}
 			astFiles = append(astFiles, parsedFile);
@@ -265,6 +283,7 @@ func checkPackage(names []string) {
 	
 	// Type check package and
 	// generate information about it
+	// Check.
 	err = pkg.check(fset, astFiles);
 	if err != nil {
 		// probably should just keep going
@@ -272,11 +291,37 @@ func checkPackage(names []string) {
 		//os.Exit(0);
 		// errors being caught in different location.
 	}
+	
+	// Attempt to load program
+	// todo: add errors and handle them
+	//loadSSA(fset, astFiles, pkg);
+	prog, _ := loadProgram(fset, astFiles);
+	if prog != nil {
+		// check for errors
+		pkg.lp = prog;
+		pkg.ssaProg = ssautil.CreateProgram(prog, 0);
+		pkg.ssaProg.Build();
+		pkg.ssaPkg = getMainFns(prog, pkg.ssaProg);
+	}
 
-	// Check.
+	if len(pkg.ssaPkg) != 0 {
+		res, err := pointer.Analyze(&pointer.Config{
+			Mains:		pkg.ssaPkg,
+			BuildCallGraph:	true,
+		});
+		if err != nil {
+			// print a warning?
+			warnf("in pointer analysis, %v", err);
+		}
+		if res != nil {
+			pkg.cGraph = res.CallGraph;
+		}
+	}
+
 	for _, file := range files {
 		file.pkg = pkg;
 	}
+
 
 	chk := make(map[ast.Node][]func(*File, ast.Node));
 	for typ, set := range checkers {
@@ -297,6 +342,42 @@ func checkPackage(names []string) {
 			ast.Walk(file, file.file);
 		}
 	}
+}
+
+// loadProgram loads a program from the parsed files
+func loadProgram(fset *token.FileSet, astFiles []*ast.File) (*loader.Program, error) {
+	var conf loader.Config;
+
+	conf.AllowErrors = true;
+	conf.Fset = fset;
+	conf.CreateFromFiles(".", astFiles...);
+
+	conf.TypeChecker.Error = func(error) {
+		// do nothing
+		// repeated above
+		// todo: merge type checkers (can this not be done twice?)
+		// todo: consider printing something (although it will be repeated)
+	}
+
+	// errors are not returned because AllowErrors set to true above
+	// todo: get all the errors from "PackageInfo" and print them
+	// here or elsewhere
+	// see documentation to see how to do this
+	prog, _ := conf.Load();
+
+	return prog, nil;
+}
+
+func getMainFns(prog *loader.Program, ssaProg *ssa.Program) []*ssa.Package {
+	ips := prog.InitialPackages();
+	mains := make([]*ssa.Package, 0, len(ips));
+	for _, info := range ips {
+		ssaPkg := ssaProg.Package(info.Pkg);
+		if ssaPkg != nil && ssaPkg.Func("main") != nil {
+			mains = append(mains, ssaPkg);
+		}
+	}
+	return mains;
 }
 
 // visit is for walking input directory roots

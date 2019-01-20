@@ -20,7 +20,7 @@ func hardcoded2() {
 	var hash string = "c4a15dd62973f33c54bcc002d8ce5d517901053b";
 	var errorStr string = "Error: Not Found";
 	apiCred := "key123"
-	var notACred1, notACred2, notAcred3 string;
+	var notACred1, notACred2, notACred3 string;
 	notACred1 = "Error: undefined reference";
 	notACred2 = "Segmentation fault";
 	notACred3 = "error";
@@ -40,4 +40,6 @@ func hardcoded2() {
 	if hardcoded1(apiCred) {
 		fmt.Println(apiCred);
 	}
+
+	fmt.Println(notACred1, notACred2, notACred3, errorStr);
 }

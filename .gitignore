@@ -17,3 +17,4 @@ sandbox/*
 .DS_Store
 printAST.txt
 printAST.go
+Output.txt

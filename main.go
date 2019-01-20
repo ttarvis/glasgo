@@ -27,6 +27,7 @@ var stdImporter types.Importer
 var (
 	source 	= 	flag.Bool("source", false, "import from source instead of compiled object files")
 	verbose = 	flag.Bool("verbose", false, "verbose logging and warnings")
+	test	=	flag.Bool("test", false, "run checker on test files")
 )
 
 // a global variable for the exit code.
@@ -232,7 +233,10 @@ func checkPackageDir(directory string) {
 	var names []string
 	names = append(names, pkg.GoFiles...);
 	names = append(names, pkg.CgoFiles...);
-	names = append(names, pkg.TestGoFiles...);
+	// don't check test files by default
+	if *test {
+		names = append(names, pkg.TestGoFiles...);
+	}
 	/* there are other types include binary files that can be added */
 	
 	/* prefix each file with the directory name

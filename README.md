@@ -41,6 +41,12 @@ Glasgo -source directory1
 Glasgo -verbose directory1
 ```
 
+Test files, those with suffis _test.go, are not checked by default by GlasGo.  To include them use the `test` flag.
+
+```
+Glasgo -test directory1
+```
+
 `Note:` The tool does not run on both directories and individual files
 
 ## Architecture

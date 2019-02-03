@@ -34,6 +34,7 @@ type SQLQuery struct {
 }
 
 var isCheckedSQL bool
+var SQLCheckFailed bool
 	
 var sqlPackages = []sqlPackage{
 	{
@@ -146,8 +147,9 @@ func sqlCheck(f *File, node ast.Node) {
 		// skip this test
 		// run a different one
 		// mark the check as complete for now so this is not run again
-		isCheckedSQL = true;
-		warnf("unable to complete check for potential SQL injection");
+		isCheckedSQL 	= true;
+		SQLCheckFailed 	= true;
+		warnf("unable to complete primary check for potential SQL injection");
 		return;
 	}
 

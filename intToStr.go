@@ -7,6 +7,7 @@ import (
 	"go/ast"
 	"go/token"
 	"fmt"
+	"reflect"
 )
 
 func init() {
@@ -46,8 +47,10 @@ func intToStrCheck(f *File, node ast.Node) {
 						}
 					}
 				default:
-					// code 1000
-					fmt.Println("error condition, please report code 1000 to maintainer");
+					// todo: figure out what the other cases here are
+					// ast.CompositeLit, ast.SliceExpr, ast.IndexExpr
+					// ast.StartExpr, ast.SelectorExpr
+					// ast.TypeAssertExpr, ast.BinaryExpr
 				}
 			}
 		}

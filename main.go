@@ -342,7 +342,9 @@ func checkPackage(names []string) {
 		if file.file != nil {
 			// Should this go in to a new function to make it more readable?
 			// file.walkFile(file.name, file.file) as a method?
-			fmt.Printf("Checking %s\n", file.name);
+			if(*verbose) {
+				fmt.Printf("Checking %s\n", file.name);
+			}
 			ast.Walk(file, file.file);
 		}
 	}

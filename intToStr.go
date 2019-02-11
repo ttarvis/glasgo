@@ -6,8 +6,6 @@ package main
 import (
 	"go/ast"
 	"go/token"
-	"fmt"
-	"reflect"
 )
 
 func init() {
